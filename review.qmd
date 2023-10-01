@@ -53,6 +53,43 @@ Related, the `batch` subdirectory in the root directory of `RSPARROW_master` are
 
 There are a few instances where it looks like the global settings of the R session are altered, which may not necessarily cause problems, but is [discouraged](https://r-pkgs.org/code.html#sec-code-r-landscape) for package development.  For example, there are several locations where it looks like the global `options()` are changed (e.g., in `batchGeoLines.R`, `batchlineShape.R`, etc.) and it's unclear if the default options are reset after function execution.  I'm guessing this isn't an issue if a user is following methods in the documentation, but it may cause unintended artifacts if additional R analyses outside of the package are used.  
 
+The general coding style for the functions don't always follow best practices.  This is not critical, and I leave it up to authors on how/if they want to address, but I've noted a few issues below that are worth considering.  Most of them relate to changes to improve readability.
+
+* Add spaces around mathematical operators and the assignment operator, e.g., `x <- 2 / 3` and not `x<- 2/3`. Same for commas, e.g., `data <- data[order(data$hydseg), ]` and not `data <- data[order(data$hydseg),]`.
+* `if/else` statements should also include spaces:
+     
+     ```r
+     if (something) { 
+      # do something
+     } else {
+      # do something else
+     }
+     ```
+     
+     and not
+     
+     ```r
+     if(something){ 
+      # do something
+     }else{
+      # do something else
+     }
+     ```
+     
+* Many function names uses camelcase (e.g., `estimateBootstraps`), consider using snakecase instead (`estimate_bootstraps`). 
+
+* A simple tool to quickly modify code-styling is the [`styler`](https://styler.r-lib.org/) package.  I would try using this instead of manually verifying the styling if you choose to modify any of the styling.   
+
+Some functions include arguments that are commented.  These should be removed, e.g., `predictMaps.R` includes unused arguments called `Rshiny`, `regular`, and `scenarios`.
+
+Some functions include internal functions that are probably better created as standalone utility functions in their own `.R` files.  This can help improve debugging and transparency of coding. For example, line 157 in `executionTree.R` includes an internal function called `unFormat()`.   
+
+In `hyseq.R`, lines 42, 43, 56, and 57 use the `aggregate()` function that applies `min()` or `max()` as `function(x) min(x)` or `function(x) max(x)`.  Why not just supply `min()` or `max()` to the `FUN` argument instead of using a generic function as a wrapper? 
+
+In `shinyMap2.R`, there are multiple `library()` calls to load the dependent packages (lines 90-108).  The standard way to load dependencies is using the Roxygen documentation, e.g., `@import leaflet` or `@importFrom` to import selected functions from a package as opposed to the entire package. Defining dependencies this way ensures the `NAMESPACE` file for the package includes the correct imports. In fact, the `NAMESPACE` file is completely empty.  This file is typically auto-generated using `devtools::document()`, where the imports are identified from the `DESCRIPTION` file and the Roxygen comments. An accurate `NAMESPACE` file is critical to ensure there are no conflicts with other packages that may be loaded in the current session. 
+
+There are several warning and error messages that might be better handled using the base R functions `warning()` and `stop()`, respectively.  For example, line 34 in `checkMissingData1Vars.R` simply uses a text string with `WARNING`.  If there's good reason to not use the base R functions, then you can leave as is, but I have rarely seen cases where there use is not preferred.  For example, `stop()` will return an error and immediately stop execution of a function given a critical error preventing further execution, whereas the error messages in `RSPARROW` simply print (or use `cat`) while continuing execution. It looks like the intent is to create an error log.  This makes sense given how most modelling tools are programmed, but it's not entirely consistent for R packages.  
+
 #### Documentation
 
 In addition to my comments below about general documentation needs for future versions, you might consider simplifying some of the Roxygen parameter components for functions that share the same parameters.  For example, `estimateFeval.R` and `estimateFevalNoadj.R` appear to share the same parameters, so instead of duplicating the `@param` entries between the two, you could use `@inheritParams estimateFeval` in the Roxygen for `estimateFevalNoadj.R` (or vice versa) to copy the parameter entries in the rendered `.Rd` files.  
