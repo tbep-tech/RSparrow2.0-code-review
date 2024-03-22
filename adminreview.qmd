@@ -1,0 +1,10 @@
+---
+title: "*RSPARROW* v2.0 admin code review"
+format: pdf
+editor: source
+author: Marcus W. Beck
+date: today
+date-format: medium
+---
+
+During the course of my evaluation of the RSPARROW 2.0 code for review, no personal, private or otherwise sensitive information was found in the software.  This includes hard-coded paths, user names, passwords, or other personally identifiable information.  This was verified by visual inspection of all source code and text searching for identifiers associated with this information (e.g., "C:/", "password", "secret", "username", etc.)
